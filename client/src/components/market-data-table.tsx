@@ -20,6 +20,11 @@ import {
   Hexagon,
   Circle,
   Diamond,
+  Triangle,
+  Square,
+  Star,
+  Shield,
+  Zap,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -41,17 +46,17 @@ const getPairIcon = (pair: string) => {
     case "ETH":
       return <Diamond className="text-white w-3 h-3" />;
     case "ADA":
-      return <Circle className="text-white w-3 h-3" />;
+      return <Triangle className="text-white w-3 h-3" />;
     case "DOT":
       return <Hexagon className="text-white w-3 h-3" />;
     case "SOL":
-      return <Circle className="text-white w-3 h-3" />;
-    case "MATIC":
-      return <Hexagon className="text-white w-3 h-3" />;
+      return <Zap className="text-white w-3 h-3" />;
     case "LINK":
-      return <Circle className="text-white w-3 h-3" />;
+      return <Square className="text-white w-3 h-3" />;
     case "UNI":
       return <Circle className="text-white w-3 h-3" />;
+    case "AVAX":
+      return <Star className="text-white w-3 h-3" />;
     default:
       return <Wallet className="text-white w-3 h-3" />;
   }
@@ -73,9 +78,9 @@ const getPairColor = (pair: string) => {
     ADA: "bg-green-500",
     DOT: "bg-purple-500",
     SOL: "bg-gradient-to-r from-purple-500 to-pink-500",
-    MATIC: "bg-indigo-500",
     LINK: "bg-blue-600",
     UNI: "bg-pink-400",
+    AVAX: "bg-red-500",
   };
   return colors[symbol] || "bg-gray-500";
 };

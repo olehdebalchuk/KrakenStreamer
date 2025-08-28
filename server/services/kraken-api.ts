@@ -215,9 +215,9 @@ export class KrakenApiService {
         ADAUSD: ["ADAUSD"],
         DOTUSD: ["DOTUSD"],
         SOLUSD: ["SOLUSD"],
-        MATICUSD: ["MATICUSD"],
         LINKUSD: ["LINKUSD"],
         UNIUSD: ["UNIUSD"],
+        AVAXUSD: ["AVAXUSD"],
       };
 
       let pairKey = "";
@@ -275,17 +275,17 @@ export class KrakenApiService {
       ADAUSD: "Cardano",
       DOTUSD: "Polkadot",
       SOLUSD: "Solana",
-      MATICUSD: "Polygon",
       LINKUSD: "Chainlink",
       UNIUSD: "Uniswap",
+      AVAXUSD: "Avalanche",
       "BTC/USD": "Bitcoin",
       "ETH/USD": "Ethereum",
       "ADA/USD": "Cardano",
       "DOT/USD": "Polkadot",
       "SOL/USD": "Solana",
-      "MATIC/USD": "Polygon",
       "LINK/USD": "Chainlink",
       "UNI/USD": "Uniswap",
+      "AVAX/USD": "Avalanche",
     };
 
     return names[pair] || pair.split("/")[0];
@@ -309,9 +309,9 @@ export class KrakenApiService {
       ADA: "bg-green-500",
       DOT: "bg-purple-500",
       SOL: "bg-pink-500",
-      MATIC: "bg-indigo-500",
       LINK: "bg-blue-600",
       UNI: "bg-pink-400",
+      AVAX: "bg-red-500",
       XBT: "bg-orange-500",
     };
 
