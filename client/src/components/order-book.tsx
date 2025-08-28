@@ -38,7 +38,7 @@ export default function OrderBook() {
   const { data: orderBook, isLoading, error, refetch } = useOrderBook(selectedPair, 5);
 
   const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['/api/orderbook', selectedPair] });
+    queryClient.invalidateQueries({ queryKey: [`/api/orderbook/${selectedPair}?count=5`] });
     refetch();
   };
 

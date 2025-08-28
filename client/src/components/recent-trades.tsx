@@ -42,7 +42,7 @@ export default function RecentTrades() {
   const { data: tradesData, isLoading, error, refetch } = useRecentTrades(selectedPair, 20);
 
   const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['/api/trades', selectedPair] });
+    queryClient.invalidateQueries({ queryKey: [`/api/trades/${selectedPair}?count=20`] });
     refetch();
   };
 

@@ -14,7 +14,7 @@ export function useTickerData(pair: string) {
 
 export function useOrderBook(pair: string, count: number = 5) {
   return useQuery<OrderBook>({
-    queryKey: ['/api/orderbook', pair, count],
+    queryKey: [`/api/orderbook/${pair}?count=${count}`],
     refetchInterval: 10000, // Refresh every 10 seconds
     staleTime: 5000,
   });
@@ -22,7 +22,7 @@ export function useOrderBook(pair: string, count: number = 5) {
 
 export function useRecentTrades(pair: string, count: number = 100) {
   return useQuery<RecentTrades>({
-    queryKey: ['/api/trades', pair, count],
+    queryKey: [`/api/trades/${pair}?count=${count}`],
     refetchInterval: 5000, // Refresh every 5 seconds
     staleTime: 2000,
   });
@@ -95,7 +95,7 @@ export function useWebSocketData() {
             switch (message.type) {
               case 'ticker':
                 // Update ticker data in cache
-                queryClient.setQueryData(['/api/ticker', message.pair], message.data);
+                queryClient.setQueryData([`/api/ticker/${message.pair}`], message.data);
                 // Also update market data cache
                 queryClient.setQueryData(['/api/market-data'], (oldData: MarketData[] | undefined) => {
                   if (!oldData) return [message.data];
@@ -109,11 +109,11 @@ export function useWebSocketData() {
                 break;
                 
               case 'orderBook':
-                queryClient.setQueryData(['/api/orderbook', message.pair, 5], message.data);
+                queryClient.setQueryData([`/api/orderbook/${message.pair}?count=5`], message.data);
                 break;
                 
               case 'trades':
-                queryClient.setQueryData(['/api/trades', message.pair, 100], message.data);
+                queryClient.setQueryData([`/api/trades/${message.pair}?count=100`], message.data);
                 break;
             }
           } catch (error) {
