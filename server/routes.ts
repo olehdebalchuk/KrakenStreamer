@@ -124,6 +124,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get API authentication status and account info
+  app.get("/api/auth-status", async (req, res) => {
+    try {
+      const authStatus = krakenApi.getAuthenticationStatus();
+      let accountInfo = null;
+      
+      if (authStatus.isAuthenticated) {
+        try {
+          accountInfo = await krakenApi.getAccountBalance();
+        } catch (error) {
+          console.error('Failed to fetch account balance:', error);
+          // Don't fail the whole request if balance fails
+          accountInfo = { error: 'Failed to fetch account balance' };
+        }
+      }
+
+      res.json({
+        authentication: authStatus,
+        account: accountInfo,
+        systemStatus: await krakenApi.getSystemStatus()
+      });
+    } catch (error) {
+      console.error('Error fetching auth status:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch authentication status',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Force refresh all data
   app.post("/api/refresh", async (req, res) => {
     try {

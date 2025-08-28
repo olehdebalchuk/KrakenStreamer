@@ -115,7 +115,12 @@ export default function PriceOverview() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="price-overview">
-      {marketData.map((data) => (
+      {marketData.map((data) => {
+        if (!data || !data.pair) {
+          console.warn('Invalid market data item:', data);
+          return null;
+        }
+        return (
         <Card key={data.pair} data-testid={`price-card-${data.pair.toLowerCase().replace('/', '-')}`}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
@@ -175,7 +180,8 @@ export default function PriceOverview() {
             </div>
           </CardContent>
         </Card>
-      ))}
+        );
+      })}
     </div>
   );
 }

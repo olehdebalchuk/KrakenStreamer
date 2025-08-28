@@ -163,7 +163,12 @@ export default function MarketDataTable() {
 
     return (
       <TableBody>
-        {marketData.map((item) => (
+        {marketData.map((item) => {
+          if (!item || !item.pair) {
+            console.warn('Invalid market data item:', item);
+            return null;
+          }
+          return (
           <TableRow 
             key={item.pair} 
             className="hover:bg-accent"
@@ -203,7 +208,8 @@ export default function MarketDataTable() {
               {formatBidAsk(item.bid, item.ask)}
             </TableCell>
           </TableRow>
-        ))}
+          );
+        })}
       </TableBody>
     );
   };

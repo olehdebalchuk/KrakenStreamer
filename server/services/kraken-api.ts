@@ -1,11 +1,14 @@
 import { type TickerData, type OrderBook, type RecentTrades, type MarketData, krakenApiErrorSchema } from "@shared/schema";
+import crypto from 'crypto';
 
 export class KrakenApiService {
   private readonly baseUrl = 'https://api.kraken.com/0';
+  private readonly apiKey = process.env.KRAKEN_API_KEY;
+  private readonly privateKey = process.env.KRAKEN_PRIVATE_KEY;
   private lastRequestTime = 0;
-  private readonly rateLimitMs = 1000; // 1 request per second
+  private readonly rateLimitMs = this.apiKey ? 500 : 1000; // Faster rate limit with API key
 
-  private async rateLimitedFetch(url: string): Promise<Response> {
+  private async rateLimitedFetch(url: string, options: RequestInit = {}): Promise<Response> {
     const now = Date.now();
     const timeSinceLastRequest = now - this.lastRequestTime;
     
@@ -15,7 +18,27 @@ export class KrakenApiService {
     }
     
     this.lastRequestTime = Date.now();
-    return fetch(url);
+    return fetch(url, options);
+  }
+
+  private generateAuthHeaders(endpoint: string, data: string = ''): Record<string, string> {
+    if (!this.apiKey || !this.privateKey) {
+      throw new Error('Kraken API credentials not configured');
+    }
+
+    const nonce = Date.now().toString();
+    const postData = `nonce=${nonce}&${data}`;
+    const message = endpoint + crypto.createHash('sha256').update(postData).digest();
+    const signature = crypto
+      .createHmac('sha512', Buffer.from(this.privateKey, 'base64'))
+      .update(message)
+      .digest('base64');
+
+    return {
+      'API-Key': this.apiKey,
+      'API-Sign': signature,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    };
   }
 
   private async makeRequest<T>(endpoint: string): Promise<T> {
@@ -36,6 +59,35 @@ export class KrakenApiService {
       return validatedData.result as T;
     } catch (error) {
       console.error(`Kraken API request failed for ${endpoint}:`, error);
+      throw error;
+    }
+  }
+
+  private async makePrivateRequest<T>(endpoint: string, data: string = ''): Promise<T> {
+    try {
+      const headers = this.generateAuthHeaders(endpoint, data);
+      const postData = `nonce=${Date.now()}&${data}`;
+      
+      const response = await this.rateLimitedFetch(`${this.baseUrl}${endpoint}`, {
+        method: 'POST',
+        headers,
+        body: postData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const responseData = await response.json();
+      const validatedData = krakenApiErrorSchema.parse(responseData);
+      
+      if (validatedData.error && validatedData.error.length > 0) {
+        throw new Error(`Kraken API Error: ${validatedData.error.join(', ')}`);
+      }
+      
+      return validatedData.result as T;
+    } catch (error) {
+      console.error(`Kraken private API request failed for ${endpoint}:`, error);
       throw error;
     }
   }
@@ -217,6 +269,33 @@ export class KrakenApiService {
     
     const symbol = pair.split('/')[0].replace('X', '');
     return colors[symbol] || 'bg-gray-500';
+  }
+
+  // Utility methods for authentication status and account info
+  isAuthenticated(): boolean {
+    return !!(this.apiKey && this.privateKey);
+  }
+
+  getAuthenticationStatus() {
+    return {
+      isAuthenticated: this.isAuthenticated(),
+      rateLimitMs: this.rateLimitMs,
+      apiKeyConfigured: !!this.apiKey,
+      privateKeyConfigured: !!this.privateKey,
+    };
+  }
+
+  // Example of a private endpoint - get account balance
+  async getAccountBalance(): Promise<any> {
+    if (!this.isAuthenticated()) {
+      throw new Error('Authentication required for account balance');
+    }
+    return this.makePrivateRequest<any>('/private/Balance');
+  }
+
+  // Get system status (public endpoint with better rate limits when authenticated)
+  async getSystemStatus(): Promise<any> {
+    return this.makeRequest<any>('/public/SystemStatus');
   }
 }
 
