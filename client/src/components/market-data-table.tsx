@@ -7,7 +7,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Download, RefreshCw, Bitcoin, Wallet, Hexagon, Circle, Diamond } from "lucide-react";
 
 const getPairIcon = (pair: string) => {
-  const symbol = pair.split('/')[0].replace('X', '');
+  // Handle both "BTC/USD" and "XBTUSD" formats
+  let symbol = pair.includes('/') ? pair.split('/')[0] : pair.replace('USD', '');
+  
+  // Map Kraken symbols to standard symbols
+  if (symbol === 'XBT' || symbol === 'XBTUSD') symbol = 'BTC';
+  if (symbol === 'XETHZUSD' || symbol === 'ETHUSD') symbol = 'ETH';
+  
   switch (symbol) {
     case 'BTC':
       return <Bitcoin className="text-white w-3 h-3" />;
@@ -31,7 +37,13 @@ const getPairIcon = (pair: string) => {
 };
 
 const getPairColor = (pair: string) => {
-  const symbol = pair.split('/')[0].replace('X', '');
+  // Handle both "BTC/USD" and "XBTUSD" formats
+  let symbol = pair.includes('/') ? pair.split('/')[0] : pair.replace('USD', '');
+  
+  // Map Kraken symbols to standard symbols
+  if (symbol === 'XBT' || symbol === 'XBTUSD') symbol = 'BTC';
+  if (symbol === 'XETHZUSD' || symbol === 'ETHUSD') symbol = 'ETH';
+  
   const colors: Record<string, string> = {
     'BTC': 'bg-orange-500',
     'ETH': 'bg-blue-500', 
