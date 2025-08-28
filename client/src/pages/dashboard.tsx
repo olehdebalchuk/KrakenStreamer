@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { ChartLine } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import PriceOverview from "@/components/price-overview";
 import SearchFilter from "@/components/search-filter";
 import OrderBook from "@/components/order-book";
@@ -22,7 +22,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <ChartLine className="text-primary text-xl" data-testid="logo-icon" />
+                <TrendingUp className="text-primary text-xl" data-testid="logo-icon" />
                 <span className="text-xl font-bold text-foreground" data-testid="app-title">
                   Kraken Dashboard
                 </span>

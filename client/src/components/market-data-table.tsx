@@ -4,13 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Download, RefreshCw, Bitcoin, Wallet } from "lucide-react";
+import { AlertCircle, Download, RefreshCw, Bitcoin, Wallet, Hexagon, Circle, Diamond } from "lucide-react";
 
 const getPairIcon = (pair: string) => {
   const symbol = pair.split('/')[0].replace('X', '');
   switch (symbol) {
     case 'BTC':
       return <Bitcoin className="text-white w-3 h-3" />;
+    case 'ETH':
+      return <Diamond className="text-white w-3 h-3" />;
+    case 'ADA':
+      return <Circle className="text-white w-3 h-3" />;
+    case 'DOT':
+      return <Hexagon className="text-white w-3 h-3" />;
+    case 'SOL':
+      return <Circle className="text-white w-3 h-3" />;
+    case 'MATIC':
+      return <Hexagon className="text-white w-3 h-3" />;
+    case 'LINK':
+      return <Circle className="text-white w-3 h-3" />;
+    case 'UNI':
+      return <Circle className="text-white w-3 h-3" />;
     default:
       return <Wallet className="text-white w-3 h-3" />;
   }
@@ -20,9 +34,13 @@ const getPairColor = (pair: string) => {
   const symbol = pair.split('/')[0].replace('X', '');
   const colors: Record<string, string> = {
     'BTC': 'bg-orange-500',
-    'ETH': 'bg-blue-500',
+    'ETH': 'bg-blue-500', 
     'ADA': 'bg-green-500',
     'DOT': 'bg-purple-500',
+    'SOL': 'bg-gradient-to-r from-purple-500 to-pink-500',
+    'MATIC': 'bg-indigo-500',
+    'LINK': 'bg-blue-600',
+    'UNI': 'bg-pink-400',
   };
   return colors[symbol] || 'bg-gray-500';
 };
