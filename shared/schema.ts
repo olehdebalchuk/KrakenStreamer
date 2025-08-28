@@ -13,6 +13,7 @@ export const tickerDataSchema = z.object({
   ask: z.number(),
   spread: z.number(),
   spreadPercent: z.number(),
+  createdAt: z.string(),
 });
 
 export const orderBookEntrySchema = z.object({
@@ -33,7 +34,7 @@ export const tradeSchema = z.object({
   price: z.number(),
   volume: z.number(),
   time: z.number(),
-  side: z.enum(['buy', 'sell']),
+  side: z.enum(["buy", "sell"]),
 });
 
 export const recentTradesSchema = z.object({
@@ -52,6 +53,7 @@ export const marketDataSchema = z.object({
   low24h: z.number(),
   bid: z.number(),
   ask: z.number(),
+  createdAt: z.string(),
 });
 
 export const krakenApiErrorSchema = z.object({
@@ -60,7 +62,7 @@ export const krakenApiErrorSchema = z.object({
 });
 
 export const websocketMessageSchema = z.object({
-  type: z.enum(['ticker', 'orderBook', 'trades']),
+  type: z.enum(["ticker", "orderBook", "trades"]),
   pair: z.string(),
   data: z.any(),
 });

@@ -1,0 +1,688 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kraken Crypto Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    borderRadius: {
+                        lg: "var(--radius)",
+                        md: "calc(var(--radius) - 2px)",
+                        sm: "calc(var(--radius) - 4px)",
+                    },
+                    colors: {
+                        background: "var(--background)",
+                        foreground: "var(--foreground)",
+                        card: {
+                            DEFAULT: "var(--card)",
+                            foreground: "var(--card-foreground)",
+                        },
+                        popover: {
+                            DEFAULT: "var(--popover)",
+                            foreground: "var(--popover-foreground)",
+                        },
+                        primary: {
+                            DEFAULT: "var(--primary)",
+                            foreground: "var(--primary-foreground)",
+                        },
+                        secondary: {
+                            DEFAULT: "var(--secondary)",
+                            foreground: "var(--secondary-foreground)",
+                        },
+                        muted: {
+                            DEFAULT: "var(--muted)",
+                            foreground: "var(--muted-foreground)",
+                        },
+                        accent: {
+                            DEFAULT: "var(--accent)",
+                            foreground: "var(--accent-foreground)",
+                        },
+                        destructive: {
+                            DEFAULT: "var(--destructive)",
+                            foreground: "var(--destructive-foreground)",
+                        },
+                        border: "var(--border)",
+                        input: "var(--input)",
+                        ring: "var(--ring)",
+                        chart: {
+                            "1": "var(--chart-1)",
+                            "2": "var(--chart-2)",
+                            "3": "var(--chart-3)",
+                            "4": "var(--chart-4)",
+                            "5": "var(--chart-5)",
+                        }
+                    },
+                    fontFamily: {
+                        sans: ["var(--font-sans)"],
+                        serif: ["var(--font-serif)"],
+                        mono: ["var(--font-mono)"],
+                    }
+                },
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --background: hsl(210 20% 98%);
+            --foreground: hsl(222.2 84% 4.9%);
+            --card: hsl(0 0% 100%);
+            --card-foreground: hsl(222.2 84% 4.9%);
+            --popover: hsl(0 0% 100%);
+            --popover-foreground: hsl(222.2 84% 4.9%);
+            --primary: hsl(217 91% 60%);
+            --primary-foreground: hsl(210 40% 98%);
+            --secondary: hsl(210 40% 96%);
+            --secondary-foreground: hsl(222.2 84% 4.9%);
+            --muted: hsl(210 40% 96%);
+            --muted-foreground: hsl(215.4 16.3% 46.9%);
+            --accent: hsl(210 40% 96%);
+            --accent-foreground: hsl(222.2 84% 4.9%);
+            --destructive: hsl(0 84.2% 60.2%);
+            --destructive-foreground: hsl(210 40% 98%);
+            --border: hsl(214.3 31.8% 91.4%);
+            --input: hsl(214.3 31.8% 91.4%);
+            --ring: hsl(217 91% 60%);
+            --radius: 0.5rem;
+            --chart-1: hsl(12 76% 61%);
+            --chart-2: hsl(173 58% 39%);
+            --chart-3: hsl(197 37% 24%);
+            --chart-4: hsl(43 74% 66%);
+            --chart-5: hsl(27 87% 67%);
+            --font-sans: 'Inter', system-ui, sans-serif;
+        }
+        
+        body {
+            font-family: var(--font-sans);
+        }
+        
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .price-up { color: hsl(142 76% 36%); }
+        .price-down { color: hsl(0 84% 60%); }
+        .price-neutral { color: hsl(215.4 16.3% 46.9%); }
+        
+        .auto-refresh-indicator {
+            width: 8px;
+            height: 8px;
+            background: hsl(142 76% 36%);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground min-h-screen">
+    <!-- @COMPONENT: Header [Navigation and branding] -->
+    <header class="bg-card border-b border-border sticky top-0 z-50">
+        <div class="container mx-auto px-4 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-chart-line text-primary text-xl"></i>
+                        <span class="text-xl font-bold text-foreground">Kraken Dashboard</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 text-sm text-muted-foreground">
+                        <div class="auto-refresh-indicator"></div>
+                        <span>Live</span>
+                    </div>
+                    <div class="text-sm text-muted-foreground">
+                        <span data-mock="true">Last updated: 12:34:56</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: Header -->
+
+    <main class="container mx-auto px-4 lg:px-8 py-6 space-y-6">
+        <!-- @COMPONENT: SearchFilter [Search and filter controls] -->
+        <div class="bg-card rounded-lg border border-border p-6">
+            <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <h1 class="text-2xl font-bold text-foreground">Cryptocurrency Markets</h1>
+                <div class="flex items-center space-x-4 w-full sm:w-auto">
+                    <div class="relative flex-1 sm:flex-none">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"></i>
+                        <input 
+                            type="text" 
+                            placeholder="Search pairs..." 
+                            class="pl-10 pr-4 py-2 bg-background border border-border rounded-md focus:ring-2 focus:ring-ring focus:border-ring outline-none text-sm w-full sm:w-64"
+                            data-mock="true"
+                            data-implementation="Filter cryptocurrency pairs based on input"
+                        />
+                    </div>
+                    <select class="px-3 py-2 bg-background border border-border rounded-md focus:ring-2 focus:ring-ring focus:border-ring outline-none text-sm" data-mock="true">
+                        <option>All Pairs</option>
+                        <option>USD Pairs</option>
+                        <option>EUR Pairs</option>
+                        <option>BTC Pairs</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: SearchFilter -->
+
+        <!-- @COMPONENT: PriceOverview [Main price cards for popular pairs] -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- @MAP: popularPairs.map(pair => ( -->
+            <div class="bg-card rounded-lg border border-border p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                            <i class="fab fa-bitcoin text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="font-semibold text-foreground" data-bind="pair.symbol">BTC/USD</span>
+                            <p class="text-xs text-muted-foreground" data-bind="pair.name">Bitcoin</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold price-up" data-bind="pair.lastPrice" data-mock="true">$43,250.50</div>
+                        <div class="text-sm price-up" data-bind="pair.change" data-mock="true">+2.34%</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-muted-foreground">24h Vol:</span>
+                        <p class="font-medium" data-bind="pair.volume24h" data-mock="true">1,234.56</p>
+                    </div>
+                    <div>
+                        <span class="text-muted-foreground">24h High:</span>
+                        <p class="font-medium" data-bind="pair.high24h" data-mock="true">$44,120.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-card rounded-lg border border-border p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                            <i class="fab fa-ethereum text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="font-semibold text-foreground" data-mock="true">ETH/USD</span>
+                            <p class="text-xs text-muted-foreground" data-mock="true">Ethereum</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold price-down" data-mock="true">$2,650.80</div>
+                        <div class="text-sm price-down" data-mock="true">-1.23%</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-muted-foreground">24h Vol:</span>
+                        <p class="font-medium" data-mock="true">2,567.89</p>
+                    </div>
+                    <div>
+                        <span class="text-muted-foreground">24h High:</span>
+                        <p class="font-medium" data-mock="true">$2,720.50</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-card rounded-lg border border-border p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                            <span class="text-white text-xs font-bold">ADA</span>
+                        </div>
+                        <div>
+                            <span class="font-semibold text-foreground" data-mock="true">ADA/USD</span>
+                            <p class="text-xs text-muted-foreground" data-mock="true">Cardano</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold price-up" data-mock="true">$0.4521</div>
+                        <div class="text-sm price-up" data-mock="true">+5.67%</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-muted-foreground">24h Vol:</span>
+                        <p class="font-medium" data-mock="true">156,789</p>
+                    </div>
+                    <div>
+                        <span class="text-muted-foreground">24h High:</span>
+                        <p class="font-medium" data-mock="true">$0.4680</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-card rounded-lg border border-border p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                            <span class="text-white text-xs font-bold">DOT</span>
+                        </div>
+                        <div>
+                            <span class="font-semibold text-foreground" data-mock="true">DOT/USD</span>
+                            <p class="text-xs text-muted-foreground" data-mock="true">Polkadot</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold price-neutral" data-mock="true">$7.89</div>
+                        <div class="text-sm price-neutral" data-mock="true">+0.12%</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-muted-foreground">24h Vol:</span>
+                        <p class="font-medium" data-mock="true">45,123</p>
+                    </div>
+                    <div>
+                        <span class="text-muted-foreground">24h High:</span>
+                        <p class="font-medium" data-mock="true">$8.05</p>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_MAP )) -->
+        </div>
+        <!-- @END_COMPONENT: PriceOverview -->
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- @COMPONENT: OrderBook [Order book display for selected pair] -->
+            <div class="bg-card rounded-lg border border-border">
+                <div class="p-6 border-b border-border">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-foreground">Order Book</h2>
+                        <div class="flex items-center space-x-2">
+                            <select class="px-3 py-1 bg-background border border-border rounded text-sm" data-mock="true">
+                                <option>BTC/USD</option>
+                                <option>ETH/USD</option>
+                                <option>ADA/USD</option>
+                            </select>
+                            <button class="p-1 text-muted-foreground hover:text-foreground" data-implementation="Refresh order book data">
+                                <i class="fas fa-refresh text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Asks -->
+                        <div>
+                            <h3 class="text-sm font-medium text-muted-foreground mb-3">Asks</h3>
+                            <div class="space-y-1">
+                                <!-- @MAP: orderBook.asks.map(ask => ( -->
+                                <div class="flex justify-between text-sm py-1" data-mock="true">
+                                    <span class="price-down font-mono" data-bind="ask.price">43,275.50</span>
+                                    <span class="text-muted-foreground font-mono" data-bind="ask.volume">0.1234</span>
+                                </div>
+                                <div class="flex justify-between text-sm py-1" data-mock="true">
+                                    <span class="price-down font-mono">43,280.25</span>
+                                    <span class="text-muted-foreground font-mono">0.0567</span>
+                                </div>
+                                <div class="flex justify-between text-sm py-1" data-mock="true">
+                                    <span class="price-down font-mono">43,285.00</span>
+                                    <span class="text-muted-foreground font-mono">0.2345</span>
+                                </div>
+                                <div class="flex justify-between text-sm py-1" data-mock="true">
+                                    <span class="price-down font-mono">43,290.75</span>
+                                    <span class="text-muted-foreground font-mono">0.0891</span>
+                                </div>
+                                <div class="flex justify-between text-sm py-1" data-mock="true">
+                                    <span class="price-down font-mono">43,295.50</span>
+                                    <span class="text-muted-foreground font-mono">0.1678</span>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+
+                        <!-- Bids -->
+                        <div>
+                            <h3 class="text-sm font-medium text-muted-foreground mb-3">Bids</h3>
+                            <div class="space-y-1">
+                                <!-- @MAP: orderBook.bids.map(bid => ( -->
+                                <div class="flex justify-between text-sm py-1" data-mock="true">
+                                    <span class="price-up font-mono" data-bind="bid.price">43,250.25</span>
+                                    <span class="text-muted-foreground font-mono" data-bind="bid.volume">0.0987</span>
+                                </div>
+                                <div class="flex justify-between text-sm py-1" data-mock="true">
+                                    <span class="price-up font-mono">43,245.00</span>
+                                    <span class="text-muted-foreground font-mono">0.1456</span>
+                                </div>
+                                <div class="flex justify-between text-sm py-1" data-mock="true">
+                                    <span class="price-up font-mono">43,240.75</span>
+                                    <span class="text-muted-foreground font-mono">0.0723</span>
+                                </div>
+                                <div class="flex justify-between text-sm py-1" data-mock="true">
+                                    <span class="price-up font-mono">43,235.50</span>
+                                    <span class="text-muted-foreground font-mono">0.2134</span>
+                                </div>
+                                <div class="flex justify-between text-sm py-1" data-mock="true">
+                                    <span class="price-up font-mono">43,230.25</span>
+                                    <span class="text-muted-foreground font-mono">0.0845</span>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-border">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-muted-foreground">Spread:</span>
+                            <span class="font-mono" data-bind="orderBook.spread" data-mock="true">$25.25 (0.058%)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: OrderBook -->
+
+            <!-- @COMPONENT: RecentTrades [Recent trades feed] -->
+            <div class="bg-card rounded-lg border border-border">
+                <div class="p-6 border-b border-border">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-foreground">Recent Trades</h2>
+                        <div class="flex items-center space-x-2">
+                            <select class="px-3 py-1 bg-background border border-border rounded text-sm" data-mock="true">
+                                <option>BTC/USD</option>
+                                <option>ETH/USD</option>
+                                <option>ADA/USD</option>
+                            </select>
+                            <button class="p-1 text-muted-foreground hover:text-foreground" data-implementation="Refresh trades data">
+                                <i class="fas fa-refresh text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-2 max-h-96 overflow-y-auto">
+                        <!-- @MAP: recentTrades.map(trade => ( -->
+                        <div class="flex items-center justify-between text-sm py-2 border-b border-border last:border-0" data-mock="true">
+                            <div class="flex items-center space-x-3">
+                                <span class="price-up font-mono" data-bind="trade.price">43,265.50</span>
+                                <span class="text-muted-foreground font-mono" data-bind="trade.volume">0.1234</span>
+                            </div>
+                            <span class="text-xs text-muted-foreground" data-bind="trade.time">12:34:45</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm py-2 border-b border-border last:border-0" data-mock="true">
+                            <div class="flex items-center space-x-3">
+                                <span class="price-down font-mono">43,260.25</span>
+                                <span class="text-muted-foreground font-mono">0.0567</span>
+                            </div>
+                            <span class="text-xs text-muted-foreground">12:34:42</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm py-2 border-b border-border last:border-0" data-mock="true">
+                            <div class="flex items-center space-x-3">
+                                <span class="price-up font-mono">43,270.00</span>
+                                <span class="text-muted-foreground font-mono">0.2345</span>
+                            </div>
+                            <span class="text-xs text-muted-foreground">12:34:38</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm py-2 border-b border-border last:border-0" data-mock="true">
+                            <div class="flex items-center space-x-3">
+                                <span class="price-up font-mono">43,268.75</span>
+                                <span class="text-muted-foreground font-mono">0.0891</span>
+                            </div>
+                            <span class="text-xs text-muted-foreground">12:34:35</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm py-2 border-b border-border last:border-0" data-mock="true">
+                            <div class="flex items-center space-x-3">
+                                <span class="price-down font-mono">43,255.50</span>
+                                <span class="text-muted-foreground font-mono">0.1678</span>
+                            </div>
+                            <span class="text-xs text-muted-foreground">12:34:32</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm py-2 border-b border-border last:border-0" data-mock="true">
+                            <div class="flex items-center space-x-3">
+                                <span class="price-up font-mono">43,272.25</span>
+                                <span class="text-muted-foreground font-mono">0.0456</span>
+                            </div>
+                            <span class="text-xs text-muted-foreground">12:34:29</span>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: RecentTrades -->
+        </div>
+
+        <!-- @COMPONENT: MarketDataTable [Comprehensive market data table] -->
+        <div class="bg-card rounded-lg border border-border">
+            <div class="p-6 border-b border-border">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-foreground">Market Data</h2>
+                    <div class="flex items-center space-x-2">
+                        <button class="px-3 py-1 bg-background border border-border rounded text-sm hover:bg-accent" data-implementation="Export market data">
+                            <i class="fas fa-download mr-1"></i>Export
+                        </button>
+                        <button class="p-1 text-muted-foreground hover:text-foreground" data-implementation="Refresh all market data">
+                            <i class="fas fa-refresh text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-muted">
+                        <tr class="border-b border-border">
+                            <th class="text-left p-4 font-medium text-muted-foreground">Pair</th>
+                            <th class="text-right p-4 font-medium text-muted-foreground">Last Price</th>
+                            <th class="text-right p-4 font-medium text-muted-foreground">24h Change</th>
+                            <th class="text-right p-4 font-medium text-muted-foreground">24h Volume</th>
+                            <th class="text-right p-4 font-medium text-muted-foreground">24h High</th>
+                            <th class="text-right p-4 font-medium text-muted-foreground">24h Low</th>
+                            <th class="text-right p-4 font-medium text-muted-foreground">Bid/Ask</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- @MAP: marketData.map(item => ( -->
+                        <tr class="border-b border-border hover:bg-accent" data-mock="true">
+                            <td class="p-4">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+                                        <i class="fab fa-bitcoin text-white text-xs"></i>
+                                    </div>
+                                    <span class="font-medium" data-bind="item.pair">BTC/USD</span>
+                                </div>
+                            </td>
+                            <td class="p-4 text-right font-mono" data-bind="item.lastPrice">$43,250.50</td>
+                            <td class="p-4 text-right">
+                                <span class="price-up font-mono" data-bind="item.change24h">+2.34%</span>
+                            </td>
+                            <td class="p-4 text-right font-mono" data-bind="item.volume24h">1,234.56</td>
+                            <td class="p-4 text-right font-mono" data-bind="item.high24h">$44,120.00</td>
+                            <td class="p-4 text-right font-mono" data-bind="item.low24h">$42,850.25</td>
+                            <td class="p-4 text-right font-mono text-sm" data-bind="item.bidAsk">$43,245 / $43,275</td>
+                        </tr>
+                        <tr class="border-b border-border hover:bg-accent" data-mock="true">
+                            <td class="p-4">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                                        <i class="fab fa-ethereum text-white text-xs"></i>
+                                    </div>
+                                    <span class="font-medium">ETH/USD</span>
+                                </div>
+                            </td>
+                            <td class="p-4 text-right font-mono">$2,650.80</td>
+                            <td class="p-4 text-right">
+                                <span class="price-down font-mono">-1.23%</span>
+                            </td>
+                            <td class="p-4 text-right font-mono">2,567.89</td>
+                            <td class="p-4 text-right font-mono">$2,720.50</td>
+                            <td class="p-4 text-right font-mono">$2,610.25</td>
+                            <td class="p-4 text-right font-mono text-sm">$2,648 / $2,652</td>
+                        </tr>
+                        <tr class="border-b border-border hover:bg-accent" data-mock="true">
+                            <td class="p-4">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                        <span class="text-white text-xs font-bold">ADA</span>
+                                    </div>
+                                    <span class="font-medium">ADA/USD</span>
+                                </div>
+                            </td>
+                            <td class="p-4 text-right font-mono">$0.4521</td>
+                            <td class="p-4 text-right">
+                                <span class="price-up font-mono">+5.67%</span>
+                            </td>
+                            <td class="p-4 text-right font-mono">156,789</td>
+                            <td class="p-4 text-right font-mono">$0.4680</td>
+                            <td class="p-4 text-right font-mono">$0.4255</td>
+                            <td class="p-4 text-right font-mono text-sm">$0.4518 / $0.4523</td>
+                        </tr>
+                        <tr class="border-b border-border hover:bg-accent" data-mock="true">
+                            <td class="p-4">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                                        <span class="text-white text-xs font-bold">DOT</span>
+                                    </div>
+                                    <span class="font-medium">DOT/USD</span>
+                                </div>
+                            </td>
+                            <td class="p-4 text-right font-mono">$7.89</td>
+                            <td class="p-4 text-right">
+                                <span class="price-neutral font-mono">+0.12%</span>
+                            </td>
+                            <td class="p-4 text-right font-mono">45,123</td>
+                            <td class="p-4 text-right font-mono">$8.05</td>
+                            <td class="p-4 text-right font-mono">$7.67</td>
+                            <td class="p-4 text-right font-mono text-sm">$7.87 / $7.91</td>
+                        </tr>
+                        <!-- @END_MAP )) -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: MarketDataTable -->
+
+        <!-- @COMPONENT: ErrorState [Error handling display] -->
+        <div class="bg-destructive/10 border border-destructive/20 rounded-lg p-4 hidden" data-error-state="true">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-exclamation-triangle text-destructive"></i>
+                <span class="text-destructive font-medium">API Connection Error</span>
+            </div>
+            <p class="text-sm text-destructive/80 mt-1">
+                Unable to fetch data from Kraken API. Please check your connection and try again.
+            </p>
+            <button class="mt-2 px-3 py-1 bg-destructive text-destructive-foreground rounded text-sm hover:bg-destructive/90" data-implementation="Retry API connection">
+                Retry
+            </button>
+        </div>
+        <!-- @END_COMPONENT: ErrorState -->
+
+        <!-- @COMPONENT: LoadingState [Loading indicator] -->
+        <div class="bg-card rounded-lg border border-border p-8 text-center hidden" data-loading-state="true">
+            <div class="loading-spinner w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p class="text-muted-foreground">Loading market data...</p>
+        </div>
+        <!-- @END_COMPONENT: LoadingState -->
+    </main>
+
+    <script>
+        // TODO: Implement Kraken API integration
+        // TODO: Add real-time WebSocket connections  
+        // TODO: Implement auto-refresh functionality
+        // TODO: Add error handling for API failures
+        // TODO: Implement search and filter functionality
+        // TODO: Add price chart visualizations
+        
+        (function() {
+            // Mock data for demonstration
+            const mockData = {
+                pairs: [
+                    { symbol: 'BTC/USD', name: 'Bitcoin', lastPrice: 43250.50, change: '+2.34%', volume24h: '1,234.56', high24h: '$44,120.00' },
+                    { symbol: 'ETH/USD', name: 'Ethereum', lastPrice: 2650.80, change: '-1.23%', volume24h: '2,567.89', high24h: '$2,720.50' }
+                ]
+            };
+
+            // Simulate real-time updates
+            function simulateRealTimeUpdates() {
+                // TODO: Replace with actual Kraken WebSocket API calls
+                const elements = document.querySelectorAll('[data-mock="true"]');
+                elements.forEach(element => {
+                    // Simulate price fluctuations for demonstration
+                    if (element.classList.contains('price-up') || element.classList.contains('price-down')) {
+                        // Add subtle animation to indicate real-time updates
+                        element.style.transition = 'background-color 0.3s ease';
+                        element.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                        setTimeout(() => {
+                            element.style.backgroundColor = 'transparent';
+                        }, 300);
+                    }
+                });
+            }
+
+            // TODO: Implement actual API calls to Kraken endpoints:
+            // - https://api.kraken.com/0/public/Ticker?pair=XBTUSD
+            // - https://api.kraken.com/0/public/Depth?pair=ETHUSD&count=5
+            // - https://api.kraken.com/0/public/Trades
+            
+            // Rate limiting: 1 request per second per IP
+            let lastApiCall = 0;
+            
+            function makeApiCall(endpoint) {
+                const now = Date.now();
+                if (now - lastApiCall < 1000) {
+                    // Rate limit compliance
+                    setTimeout(() => makeApiCall(endpoint), 1000 - (now - lastApiCall));
+                    return;
+                }
+                lastApiCall = now;
+                
+                // TODO: Implement actual fetch calls
+                fetch(`https://api.kraken.com/0${endpoint}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error && data.error.length > 0) {
+                            console.error('Kraken API Error:', data.error);
+                            // Show error state
+                            return;
+                        }
+                        // Process successful response
+                        console.log('API Response:', data.result);
+                    })
+                    .catch(error => {
+                        console.error('Network Error:', error);
+                        // Show error state
+                    });
+            }
+
+            // Simulate updates every 15 seconds
+            setInterval(simulateRealTimeUpdates, 15000);
+            
+            // TODO: Implement search functionality
+            const searchInput = document.querySelector('input[placeholder="Search pairs..."]');
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    // TODO: Filter displayed pairs based on input
+                    console.log('Searching for:', e.target.value);
+                });
+            }
+
+            // TODO: Implement refresh buttons
+            const refreshButtons = document.querySelectorAll('[data-implementation*="Refresh"]');
+            refreshButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // TODO: Refresh specific data section
+                    console.log('Refreshing data section');
+                });
+            });
+
+            // Initialize app
+            console.log('Kraken Dashboard initialized');
+            // TODO: Start WebSocket connections for real-time data
+            // TODO: Load initial market data
+        })();
+    </script>
+</body>
+</html>
