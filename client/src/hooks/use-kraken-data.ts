@@ -84,7 +84,7 @@ export function useWebSocketData() {
           // Subscribe to updates for popular pairs
           ws.send(JSON.stringify({
             type: 'subscribe',
-            pairs: ['XBTUSD', 'ETHUSD', 'ADAUSD', 'DOTUSD']
+            pairs: ['XBTUSD', 'ETHUSD', 'ADAUSD', 'DOTUSD', 'SOLUSD', 'LINKUSD', 'UNIUSD', 'AVAXUSD']
           }));
         };
 
@@ -99,12 +99,16 @@ export function useWebSocketData() {
                 // Also update market data cache
                 queryClient.setQueryData(['/api/market-data'], (oldData: MarketData[] | undefined) => {
                   if (!oldData) return [message.data];
-                  const updated = oldData.map(item => 
-                    item.pair === message.pair ? { ...item, ...message.data } : item
-                  );
-                  return updated.some(item => item.pair === message.pair) 
-                    ? updated 
-                    : [...updated, message.data];
+                  // Only update if we have valid data and the pair exists
+                  if (message.data && message.data.pair) {
+                    const updated = oldData.map(item => 
+                      item && item.pair === message.pair ? { ...item, ...message.data } : item
+                    ).filter(Boolean); // Remove any null/undefined items
+                    return updated.some(item => item && item.pair === message.pair) 
+                      ? updated 
+                      : [...updated, message.data];
+                  }
+                  return oldData;
                 });
                 break;
                 
@@ -117,7 +121,7 @@ export function useWebSocketData() {
                 break;
             }
           } catch (error) {
-            console.error('Error processing WebSocket message:', error);
+            console.error('Error processing WebSocket message:', error instanceof Error ? error.message : 'Unknown error');
           }
         };
 

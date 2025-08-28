@@ -262,11 +262,7 @@ export default function MarketDataTable() {
 
     return (
       <TableBody>
-        {marketData.map((item) => {
-          if (!item || !item.pair) {
-            console.warn("Invalid market data item:", item);
-            return null;
-          }
+        {marketData.filter(item => item && item.pair).map((item) => {
           return (
             <TableRow
               key={item.pair}
