@@ -25,6 +25,7 @@ import {
   Star,
   Shield,
   Zap,
+  Mountain,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -56,7 +57,7 @@ const getPairIcon = (pair: string) => {
     case "UNI":
       return <Circle className="text-white w-3 h-3" />;
     case "AVAX":
-      return <Star className="text-white w-3 h-3" />;
+      return <Mountain className="text-white w-3 h-3" />;
     default:
       return <Wallet className="text-white w-3 h-3" />;
   }
