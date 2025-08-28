@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { krakenApi } from "./services/kraken-api";
 import { type WebSocketMessage } from "@shared/schema";
 
-const POPULAR_PAIRS = ['XBTUSD', 'ETHUSD', 'ADAUSD', 'DOTUSD', 'SOLUSD', 'MATICUSD', 'LINKUSD', 'UNIUSD'];
+const POPULAR_PAIRS = ['XBTUSD', 'ETHUSD', 'ADAUSD', 'DOTUSD', 'SOLUSD', 'LINKUSD', 'UNIUSD'];
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get ticker data for a specific pair
